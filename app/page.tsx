@@ -857,16 +857,9 @@ export default function Home() {
     name: "",
     email: "",
     company: "",
+    subject: "",
     message: "",
   });
-  const [contactStatus, setContactStatus] = useState<{
-    type: "idle" | "success" | "error";
-    message: string;
-  }>({
-    type: "idle",
-    message: "",
-  });
-  const [isSending, setIsSending] = useState(false);
 
   function handleContactChange(
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -875,46 +868,22 @@ export default function Home() {
     setContactForm((current) => ({ ...current, [name]: value }));
   }
 
-  async function handleContactSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleContactSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setIsSending(true);
-    setContactStatus({ type: "idle", message: "" });
+    const body = [
+      `Name: ${contactForm.name}`,
+      `Email: ${contactForm.email}`,
+      `Contact details: ${contactForm.company || "Not provided"}`,
+      "",
+      "Message:",
+      contactForm.message,
+    ].join("\n");
 
-    try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(contactForm),
-      });
+    const mailtoHref = `mailto:sandervaneck@outlook.com?subject=${encodeURIComponent(
+      contactForm.subject,
+    )}&body=${encodeURIComponent(body)}`;
 
-      const data = (await response.json()) as { message?: string };
-
-      if (!response.ok) {
-        throw new Error(data.message ?? "Failed to send message.");
-      }
-
-      setContactForm({
-        name: "",
-        email: "",
-        company: "",
-        message: "",
-      });
-      setContactStatus({
-        type: "success",
-        message: "Message sent. I will get back to you soon.",
-      });
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to send message.";
-      setContactStatus({
-        type: "error",
-        message,
-      });
-    } finally {
-      setIsSending(false);
-    }
+    window.location.href = mailtoHref;
   }
 
   return (
@@ -1007,13 +976,10 @@ export default function Home() {
                 Contact
               </p>
               <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em]">
-                Need a product that clarifies operations and looks sharp doing it?
+                Let&apos;s get in touch!
               </h2>
               <p className="mt-4 text-base leading-8 text-slate-300">
-                Send the current bottleneck, business model, and what needs to
-                work better. Your message goes directly to
-                {" "}
-                <span className="font-medium text-white">sandervaneck@outlook.com</span>.
+                Any comments or questions? Want to work together?
               </p>
               <form className="mt-8 space-y-5" onSubmit={handleContactSubmit}>
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -1049,6 +1015,21 @@ export default function Home() {
 
                 <label className="block">
                   <span className="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-300">
+                    Subject
+                  </span>
+                  <input
+                    type="text"
+                    name="subject"
+                    value={contactForm.subject}
+                    onChange={handleContactChange}
+                    required
+                    className="w-full rounded-[1rem] border border-slate-300/80 bg-gradient-to-br from-stone-100 via-slate-200 to-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-600 focus:border-cyan-500"
+                    placeholder="Project inquiry"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-300">
                     Contact Details
                   </span>
                   <input
@@ -1076,28 +1057,15 @@ export default function Home() {
                   />
                 </label>
 
-                {contactStatus.type !== "idle" ? (
-                  <div
-                    className={`rounded-[1rem] border px-4 py-3 text-sm ${
-                      contactStatus.type === "success"
-                        ? "border-emerald-300/25 bg-emerald-300/10 text-emerald-100"
-                        : "border-rose-300/25 bg-rose-300/10 text-rose-100"
-                    }`}
-                  >
-                    {contactStatus.message}
-                  </div>
-                ) : null}
-
                 <div className="flex items-center justify-between gap-4">
                   <p className="text-sm leading-6 text-slate-400">
-                    Best outreach includes project scope, timeline, and the bottleneck that needs fixing.
+                    Clicking send opens your email app with the subject and message prefilled.
                   </p>
                   <button
                     type="submit"
-                    disabled={isSending}
-                    className="inline-flex shrink-0 items-center rounded-full bg-white px-6 py-3 text-sm font-medium text-slate-950 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="inline-flex shrink-0 items-center rounded-full bg-white px-6 py-3 text-sm font-medium text-slate-950 transition hover:bg-cyan-100"
                   >
-                    {isSending ? "Sending..." : "Send"}
+                    Send
                   </button>
                 </div>
               </form>
